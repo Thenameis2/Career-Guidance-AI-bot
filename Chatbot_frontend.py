@@ -4,20 +4,17 @@ from streamlit_chat import message
 from streamlit_extras.colored_header import colored_header
 from streamlit_extras.add_vertical_space import add_vertical_space
 import nltk
-nltk.download('stopwords')
-
-
-nltk.download("punkt")
-nltk.download('wordnet')
 from nltk.stem import WordNetLemmatizer
-lemmatizer = WordNetLemmatizer()
 import json
 import pickle
 
-import numpy as np
+# import numpy as np
 from keras.models import load_model
-
 from PIL import Image
+
+nltk.download(["stopwords", "punkt", "wordnet"])
+
+lemmatizer = WordNetLemmatizer()
 # <-------------------------------------------------------------Functions ----------------------------------------------------------------------------------->
 # from chatbot_final_code import clean_up_sentence
 # from chatbot_final_code import bow
@@ -25,10 +22,10 @@ from PIL import Image
 # from chatbot_final_code import chatbot_response
 
 # <---------------------------------------------------------- Page Configaration ----------------------------------------------------------------------------->
-im = Image.open('bot.jpg')
-st.set_page_config(layout="wide",page_title="Student's Career Counselling Chatbot",page_icon = im)
-
-
+im = Image.open("bot.jpg")
+st.set_page_config(
+    layout="wide", page_title="Student's Career Counselling Chatbot", page_icon=im
+)
 
 
 # <---------------------------------------------------------- Main Header ------------------------------------------------------------------------------------->
@@ -40,33 +37,35 @@ st.markdown(
         </h1>
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
 # <========================================================= Importing Data Files  ====================================================================>
 
-with open('intents3.json', 'r') as file:
+with open("intents3.json", "r") as file:
     intents = json.load(file)
-with open('words.pkl', 'rb') as file:
+with open("words.pkl", "rb") as file:
     words = pickle.load(file)
-with open('classes.pkl', 'rb') as file:
+with open("classes.pkl", "rb") as file:
     classes = pickle.load(file)
-
 
 
 # <--------------------------hide the right side streamlit menue button --------------------------------->
 # Referance ~ "https://towardsdatascience.com/5-ways-to-customise-your-streamlit-ui-e914e458a17c"
-st.markdown(""" <style>
+st.markdown(
+    """ <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-</style> """, unsafe_allow_html=True)
+</style> """,
+    unsafe_allow_html=True,
+)
 
 
-# <=========================================================== Sidebar ================================================================================> 
+# <=========================================================== Sidebar ================================================================================>
 with st.sidebar:
-    st.title('''🤗💬 Student's career counselling bot''')
-    
-    st.markdown('''
+    st.title("""🤗💬 Student's career counselling bot""")
+
+    st.markdown("""
     ## About~
     This app has been developed by 5 students of VIT-AP :\n
     Harshita Bajaj [22MSD7013]\n
@@ -75,49 +74,51 @@ with st.sidebar:
     Shritama Sengupta [22MSD7032]\n
     Arundhuti Chakraborty [22MSD7046]
 
-    ''')
+    """)
     add_vertical_space(5)
-    
+
 # <============================================================= Initializing Session State ==========================================================>
-if 'generated' not in st.session_state:
-    st.session_state['generated'] = ["I'm an AI Career Counselor, How may I help you?"]
+if "generated" not in st.session_state:
+    st.session_state["generated"] = ["I'm an AI Career Counselor, How may I help you?"]
 
-if 'past' not in st.session_state:
-    st.session_state['past'] = ['Hi!']
-
+if "past" not in st.session_state:
+    st.session_state["past"] = ["Hi!"]
 
 
 input_container = st.container()
 
-colored_header(label='', description='', color_name='blue-30')
+# It was blue-30, but that wasn't in list of accepted colors. Assuming a typo.
+colored_header(label="", description="", color_name="blue-70")
 response_container = st.container()
 
 
-#<================================================== Function for taking user provided prompt as input ================================================>
+# <================================================== Function for taking user provided prompt as input ================================================>
 # def pressed_enter_key(text):
-#     if text == 
+#     if text ==
+
 
 def get_text():
-    input_text = st.text_input("You: ",  key="input", on_change=None)
+    input_text = st.text_input("You: ", key="input", on_change=None)
     return input_text
 
-styl = f"""
+
+styl = """
 <style>
-    .stTextInput {{
+    .stTextInput {
     position: fixed;
     bottom: 20px;
     z-index: 20;
-    }}
+    }
 </style>
 """
 st.markdown(styl, unsafe_allow_html=True)
 
-#<------------------------------------------------ Applying the user input box ------------------------------------------------------------------------>
+# <------------------------------------------------ Applying the user input box ------------------------------------------------------------------------>
 with input_container:
     user_input = get_text()
 
 # <================================================ Loading The Model ===============================================================>
-model=load_model('chatbot_model.h5')
+model = load_model("chatbot_model.h5")
 
 
 # <============================== Function for taking user prompt as input followed by producing AI generated responses ============>
@@ -131,11 +132,11 @@ model=load_model('chatbot_model.h5')
 #     predict_class(prompt,model)
 #     response = chatbot_response(prompt)
 #     return response
-#<--------------------Creating the submit button and changing it using CSS----------------------->    
+# <--------------------Creating the submit button and changing it using CSS----------------------->
 submit_button = st.button("Enter")
-styl = f"""
+styl = """
     <style>
-        .stButton {{
+        .stButton {
         position: fixed;
         font-weight: bold;
         margin-top: -10px;
@@ -146,33 +147,31 @@ styl = f"""
         border-radius: 20px;
         height:200px
         width:100px
-        }}
+        }
         
     </style>
     """
 st.markdown(styl, unsafe_allow_html=True)
 
-#<====================== Conditional display of AI generated responses as a function of user provided prompts=====================================>
+# <====================== Conditional display of AI generated responses as a function of user provided prompts=====================================>
 with response_container:
-    if user_input: 
+    if user_input:
         if submit_button:
             if user_input == "Who is your maker":
                 response = "GOD !!"
                 st.session_state.past.append(user_input)
 
-
                 # TODO: RENDER a response HERE
                 st.session_state.generated.append(response)
-                #st.text_input("Enter your input", value="", key="user_input")
+                # st.text_input("Enter your input", value="", key="user_input")
 
             else:
-                
-                response = None # generate_response(user_input)
+                response = None  # generate_response(user_input)
                 st.session_state.past.append(user_input)
                 st.session_state.generated.append(response)
-                #st.text_input("Enter your input", value="", key="user_input")
-        
-    if st.session_state['generated']:
-        for i in range(len(st.session_state['generated'])):
-            message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
-            message(st.session_state['generated'][i], key=str(i))
+                # st.text_input("Enter your input", value="", key="user_input")
+
+    if st.session_state["generated"]:
+        for i in range(len(st.session_state["generated"])):
+            message(st.session_state["past"][i], is_user=True, key=str(i) + "_user")
+            message(st.session_state["generated"][i], key=str(i))
