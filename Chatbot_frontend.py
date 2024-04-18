@@ -18,6 +18,8 @@ except ImportError:
 
 from PIL import Image
 
+chatbot_final_code.init()
+
 nltk.download(["stopwords", "punkt", "wordnet"], quiet=True)
 
 lemmatizer = WordNetLemmatizer()
@@ -131,10 +133,12 @@ model = load_model("chatbot_cache/chatbot_model.h5")
 
 # TODO: Implement a data model that will make a response
 
-# def generate_response(prompt):
-#     # clean_up_sentence(), bow(), and predict_class() are called indirectly
-#     response = chatbot_response(prompt)
-#     return response
+
+def generate_response(prompt):
+    # clean_up_sentence(), bow(), and predict_class() are called indirectly
+    response = chatbot_final_code.chatbot_response(prompt)
+    return response
+
 
 # <--------------------Creating the submit button and changing it using CSS----------------------->
 submit_button = st.button("Enter")
@@ -167,13 +171,13 @@ with response_container:
 
                 # TODO: RENDER a response HERE
                 st.session_state.generated.append(response)
-                # st.text_input("Enter your input", value="", key="user_input")
+                st.text_input("Enter your input", value="", key="user_input")
 
             else:
-                response = None  # generate_response(user_input)
+                response = generate_response(user_input)
                 st.session_state.past.append(user_input)
                 st.session_state.generated.append(response)
-                # st.text_input("Enter your input", value="", key="user_input")
+                st.text_input("Enter your input", value="", key="user_input")
 
     if st.session_state["generated"]:
         for i in range(len(st.session_state["generated"])):

@@ -1,6 +1,7 @@
 import json
 import pickle
 import random
+from typing import Any, Optional
 
 import nltk
 import numpy as np
@@ -10,105 +11,130 @@ from keras.models import Sequential, load_model
 from keras.optimizers import SGD
 from nltk.stem import WordNetLemmatizer
 
-lemmatizer = WordNetLemmatizer()
-
-words = []
+words: list[str] = []
 classes = []
 documents = []
 ignore_words = ["?", "!"]
-data_file = open("intents3.json").read()
-intents = json.loads(data_file)
+intents: Any = None
+chatbot_model: Optional[Model] = None
 
-for intent in intents["intents"]:
-    for pattern in intent["patterns"]:
-        # tokenize each word
-        w = nltk.word_tokenize(pattern)
-        words.extend(w)
-        # add documents in the corpus
-        documents.append((w, intent["tag"]))
-
-        # add to our classes list
-        if intent["tag"] not in classes:
-            classes.append(intent["tag"])
+init_ran: bool = False
 
 
-# lemmatize, lower each word and remove duplicates
-words = [lemmatizer.lemmatize(w.lower()) for w in words if w not in ignore_words]
-words = sorted(list(set(words)))
-# sort classes
-classes = sorted(list(set(classes)))
-# documents = combination between patterns and intents
-print(len(documents), "documents")
-# classes = intents
-print(len(classes), "classes", classes)
-# words = all words, vocabulary
-print(len(words), "unique lemmatized words", words)
+def init():
+    """
+    init() is responsible not just for initialization, but creating files, so it must
+    be called explicitly.
+    """
+    global words, classes, documents, ignore_words, intents, init_ran, chatbot_model
 
-pickle.dump(words, open("chatbot_cache/words.pkl", "wb"))
-pickle.dump(classes, open("chatbot_cache/classes.pkl", "wb"))
+    if init_ran:
+        return
 
-# Create empty lists for training data
-train_x = []
-train_y = []
+    data_file = open("intents3.json").read()
+    intents = json.loads(data_file)
 
-# Iterate over each document in the 'documents' list
-for doc in documents:
-    # Initialize the bag of words and output row
-    bag = []
-    output_row = [0] * len(classes)
+    new_words = []
+    for intent in intents["intents"]:
+        for pattern in intent["patterns"]:
+            # tokenize each word
+            w = nltk.word_tokenize(pattern)
+            new_words.extend(w)
+            # add documents in the corpus
+            documents.append((w, intent["tag"]))
 
-    # Tokenize and lemmatize the words in the pattern
-    pattern_words = [lemmatizer.lemmatize(word.lower()) for word in doc[0]]
+            # add to our classes list
+            if intent["tag"] not in classes:
+                classes.append(intent["tag"])
 
-    # Create the bag of words
-    for word in words:
-        bag.append(1) if word in pattern_words else bag.append(0)
+    # lemmatize, lower each word and remove duplicates
+    lemmatizer = WordNetLemmatizer()
+    words = [
+        lemmatizer.lemmatize(w.lower()) for w in new_words if w not in ignore_words
+    ]
+    words = sorted(list(set(words)))
+    # sort classes
+    classes = sorted(list(set(classes)))
+    # documents = combination between patterns and intents
+    print(len(documents), "documents")
+    # classes = intents
+    print(len(classes), "classes", classes)
+    # words = all words, vocabulary
+    print(len(words), "unique lemmatized words", words)
 
-    # Set the appropriate output value for the current tag
-    output_row[classes.index(doc[1])] = 1
+    pickle.dump(words, open("chatbot_cache/words.pkl", "wb"))
+    pickle.dump(classes, open("chatbot_cache/classes.pkl", "wb"))
 
-    # Append the bag of words and output row to the training data lists
-    train_x.append(bag)
-    train_y.append(output_row)
+    # Create empty lists for training data
+    train_x = []
+    train_y = []
 
-# Convert the training data lists to NumPy arrays
-train_x = np.array(train_x)
-train_y = np.array(train_y)
+    # Iterate over each document in the 'documents' list
+    for doc in documents:
+        # Initialize the bag of words and output row
+        bag = []
+        output_row = [0] * len(classes)
 
-print("Training data created")
+        # Tokenize and lemmatize the words in the pattern
+        pattern_words = [lemmatizer.lemmatize(word.lower()) for word in doc[0]]
 
+        # Create the bag of words
+        for word in words:
+            bag.append(1) if word in pattern_words else bag.append(0)
 
-# Create model - 3 layers. First layer 128 neurons, second layer 64 neurons and 3rd output layer contains number of neurons
-# equal to number of intents to predict output intent with softmax
-model = Sequential()
-model.add(Dense(128, input_shape=(len(train_x[0]),), activation="relu"))
-model.add(Dropout(0.5))
-model.add(Dense(64, activation="relu"))
-model.add(Dropout(0.5))
-model.add(Dense(len(train_y[0]), activation="softmax"))
+        # Set the appropriate output value for the current tag
+        output_row[classes.index(doc[1])] = 1
 
-# Compile model. Stochastic gradient descent with Nesterov accelerated gradient gives good results for this model
-sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss="categorical_crossentropy", optimizer=sgd, metrics=["accuracy"])
+        # Append the bag of words and output row to the training data lists
+        train_x.append(bag)
+        train_y.append(output_row)
 
-# fitting and saving the model
-model.fit(np.array(train_x), np.array(train_y), epochs=100, batch_size=5, verbose="1")
-model.save("chatbot_cache/chatbot_model.h5")
+    # Convert the training data lists to NumPy arrays
+    train_x = np.array(train_x)
+    train_y = np.array(train_y)
 
-print("model created")
+    print("Training data created")
 
-chatbot_model: Model = load_model("chatbot_cache/chatbot_model.h5")  # type: ignore
-assert isinstance(chatbot_model, Model)
+    # Create model - 3 layers. First layer 128 neurons, second layer 64 neurons and 3rd output layer contains number of neurons
+    # equal to number of intents to predict output intent with softmax
+    model = Sequential()
+    model.add(Dense(128, input_shape=(len(train_x[0]),), activation="relu"))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dropout(0.5))
+    model.add(Dense(len(train_y[0]), activation="softmax"))
 
-intents = json.loads(open("intents3.json").read())
-words = pickle.load(open("chatbot_cache/words.pkl", "rb"))
-classes = pickle.load(open("chatbot_cache/classes.pkl", "rb"))
+    # Compile model. Stochastic gradient descent with Nesterov accelerated gradient gives good results for this model
+    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+    model.compile(loss="categorical_crossentropy", optimizer=sgd, metrics=["accuracy"])
+
+    # fitting and saving the model
+    model.fit(
+        np.array(train_x), np.array(train_y), epochs=100, batch_size=5, verbose="1"
+    )
+    model.save("chatbot_cache/chatbot_model.h5")
+
+    print("model created")
+
+    model = load_model("chatbot_cache/chatbot_model.h5")
+    assert isinstance(model, Model)
+    chatbot_model = model
+
+    intents = json.loads(open("intents3.json").read())
+    words = pickle.load(open("chatbot_cache/words.pkl", "rb"))
+    classes = pickle.load(open("chatbot_cache/classes.pkl", "rb"))
+
+    init_ran = True
 
 
 def clean_up_sentence(sentence: str) -> list[str]:
+    if not init_ran:
+        raise AssertionError(f"{__name__}.init() must be called before this function")
+
     # tokenize the pattern - split words into array
     sentence_words = nltk.word_tokenize(sentence)
     # stem each word - create short form for word
+    lemmatizer = WordNetLemmatizer()
     sentence_words = [lemmatizer.lemmatize(word.lower()) for word in sentence_words]
     return sentence_words
 
@@ -132,6 +158,9 @@ def bow(sentence, words, show_details=True):
 
 
 def predict_class(sentence, model: Model):
+    if not init_ran:
+        raise AssertionError(f"{__name__}.init() must be called before this function")
+
     # filter out predictions below a threshold
     p = bow(sentence, words, show_details=False)
     res = model.predict(np.array([p]))[0]
@@ -158,6 +187,11 @@ def getResponse(ints, intents_json):
 
 
 def chatbot_response(text):
-    ints = predict_class(text, model)
+    global chatbot_model
+    if chatbot_model is None:
+        raise AssertionError(f"{__name__}.init() must be called before this function")
+    else:
+        pass
+    ints = predict_class(text, chatbot_model)
     res = getResponse(ints, intents)
     return res
