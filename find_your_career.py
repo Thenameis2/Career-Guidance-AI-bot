@@ -1,7 +1,7 @@
 import pandas as pd
 import random
 
-cols = [
+cols = {
     "Database Fundamentals",
     "Computer Architecture",
     "Distributed Computing Systems",
@@ -19,7 +19,7 @@ cols = [
     "Data Science",
     "Troubleshooting skills",
     "Graphics Designing",
-]
+}
 
 skill_lvl = {
     4: "Average",
