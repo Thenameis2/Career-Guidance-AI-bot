@@ -36,7 +36,7 @@ prev_df = pd.DataFrame()
 
 
 def get_job_df(dataframe: pd.DataFrame, skill: str, user_skill: str | int):
-    dataframe = dataframe[dataframe[skill] == user_skill]
+    dataframe = dataframe.loc[dataframe[skill] == user_skill]
     print(dataframe["Role"])
     return dataframe
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
         print(len(set(df["Role"])))
 
-        if len(set(df["Role"])) <= 10:
+        if len(set(df["Role"])) <= 7:
             break
 
         df = get_job_df(df, column, selected)
@@ -62,17 +62,23 @@ if __name__ == "__main__":
         if len(set(df["Role"])) == 0:
             break
 
-    print(set(df["Role"]))
-    print(len(set(df["Role"])))
+    # print(set(df["Role"]))
+    # print(len(set(df["Role"])))
 
-    print(set(prev_df["Role"]))
-    print(len(set(prev_df["Role"])))
+    # print(set(prev_df["Role"]))
+    # print(len(set(prev_df["Role"])))
 
-    if len(set(prev_df["Role"])) > 5:
+    if len(set(df["Role"])) > 0:
+        list_of_df = list(set(df["Role"]))
+        print("This is the df")
+        print(list_of_df)
+
+    elif len(set(prev_df["Role"])) > 5:
         listOfPrev_df = list(set(prev_df["Role"]))
         job_choices = []
         for i in range(3):
             choice = random.choice(listOfPrev_df)
             job_choices.append(choice)
             listOfPrev_df.remove(choice)
+        print("This is the prev_df")
         print(job_choices)
