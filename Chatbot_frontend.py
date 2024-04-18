@@ -9,10 +9,14 @@ import json
 import pickle
 
 # import numpy as np
-from keras.models import load_model
+try:
+    from keras.models import load_model  # type: ignore
+except ImportError:
+    from keras.saving import load_model  # type: ignore
+
 from PIL import Image
 
-nltk.download(["stopwords", "punkt", "wordnet"])
+nltk.download(["stopwords", "punkt", "wordnet"], quiet=True)
 
 lemmatizer = WordNetLemmatizer()
 # <-------------------------------------------------------------Functions ----------------------------------------------------------------------------------->

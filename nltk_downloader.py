@@ -2,6 +2,7 @@ import os
 
 required_packages = ["stopwords", "punkt", "wordnet"]
 
+
 def main():
     """
     A script to download the nltk data to the same folder that holds the other dependencies.
@@ -32,9 +33,13 @@ def main():
         )
         raise
 
-    download_dir = os.path.join(virtual_environment, "nltk_data")
+    download_dir = os.path.normcase(
+        os.path.normpath(os.path.join(virtual_environment, "nltk_data"))
+    )
     print("Will install to:", download_dir, sep="\n")
-    if download_dir not in nltk.data.path:
+    if download_dir not in (
+        os.path.normcase(os.path.normpath(p)) for p in nltk.data.path
+    ):
         print(
             "That path wasn't found in the paths usef by nltk:",
             nltk.data.path,
