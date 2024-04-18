@@ -20,3 +20,15 @@ The chatbot uses natural language processing and a neural network to understand 
 - *`Machine Learning`*
 - *`NLP`*
 - *`Streamlit`*
+
+
+
+
+
+HM_map = {'Average' : 5,
+'Intermediate' : 6,
+'Beginner' : 3,
+'Not Interested' : 1, 
+'Excellent' : 7,
+'Poor': 2,
+'Professional: 9'}

@@ -1,4 +1,7 @@
 # <========================================================= Importing Required Libraries & Functions =================================================>
+from find_your_career import cols
+
+
 import streamlit as st
 from streamlit_chat import message
 from streamlit_extras.colored_header import colored_header
@@ -97,8 +100,6 @@ response_container = st.container()
 
 
 # <================================================== Function for taking user provided prompt as input ================================================>
-# def pressed_enter_key(text):
-#     if text ==
 
 
 def get_text():
@@ -116,6 +117,11 @@ styl = """
 </style>
 """
 st.markdown(styl, unsafe_allow_html=True)
+
+
+def get_button():
+    pass
+
 
 # <------------------------------------------------ Applying the user input box ------------------------------------------------------------------------>
 with input_container:
@@ -158,6 +164,10 @@ styl = """
 st.markdown(styl, unsafe_allow_html=True)
 
 # <====================== Conditional display of AI generated responses as a function of user provided prompts=====================================>
+
+# selected_option = st.button("Average")
+
+
 with response_container:
     if user_input:
         if submit_button:
