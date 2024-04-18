@@ -4,6 +4,7 @@ import random
 
 import nltk
 import numpy as np
+from keras import Model
 from keras.layers import Dense, Dropout
 from keras.models import Sequential, load_model
 from keras.optimizers import SGD
@@ -43,8 +44,8 @@ print(len(classes), "classes", classes)
 # words = all words, vocabulary
 print(len(words), "unique lemmatized words", words)
 
-pickle.dump(words, open("words.pkl", "wb"))
-pickle.dump(classes, open("classes.pkl", "wb"))
+pickle.dump(words, open("chatbot_cache/words.pkl", "wb"))
+pickle.dump(classes, open("chatbot_cache/classes.pkl", "wb"))
 
 # Create empty lists for training data
 train_x = []
@@ -92,18 +93,19 @@ model.compile(loss="categorical_crossentropy", optimizer=sgd, metrics=["accuracy
 
 # fitting and saving the model
 model.fit(np.array(train_x), np.array(train_y), epochs=100, batch_size=5, verbose="1")
-model.save("chatbot_model.h5")
+model.save("chatbot_cache/chatbot_model.h5")
 
 print("model created")
 
-model = load_model("chatbot_model.h5")
+chatbot_model: Model = load_model("chatbot_cache/chatbot_model.h5")  # type: ignore
+assert isinstance(chatbot_model, Model)
 
 intents = json.loads(open("intents3.json").read())
-words = pickle.load(open("words.pkl", "rb"))
-classes = pickle.load(open("classes.pkl", "rb"))
+words = pickle.load(open("chatbot_cache/words.pkl", "rb"))
+classes = pickle.load(open("chatbot_cache/classes.pkl", "rb"))
 
 
-def clean_up_sentence(sentence):
+def clean_up_sentence(sentence: str) -> list[str]:
     # tokenize the pattern - split words into array
     sentence_words = nltk.word_tokenize(sentence)
     # stem each word - create short form for word
@@ -129,7 +131,7 @@ def bow(sentence, words, show_details=True):
     return np.array(bag)
 
 
-def predict_class(sentence, model):
+def predict_class(sentence, model: Model):
     # filter out predictions below a threshold
     p = bow(sentence, words, show_details=False)
     res = model.predict(np.array([p]))[0]

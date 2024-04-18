@@ -8,6 +8,8 @@ from nltk.stem import WordNetLemmatizer
 import json
 import pickle
 
+import chatbot_final_code
+
 # import numpy as np
 try:
     from keras.models import load_model  # type: ignore
@@ -19,11 +21,6 @@ from PIL import Image
 nltk.download(["stopwords", "punkt", "wordnet"], quiet=True)
 
 lemmatizer = WordNetLemmatizer()
-# <-------------------------------------------------------------Functions ----------------------------------------------------------------------------------->
-# from chatbot_final_code import clean_up_sentence
-# from chatbot_final_code import bow
-# from chatbot_final_code import predict_class
-# from chatbot_final_code import chatbot_response
 
 # <---------------------------------------------------------- Page Configaration ----------------------------------------------------------------------------->
 im = Image.open("bot.jpg")
@@ -48,9 +45,9 @@ st.markdown(
 
 with open("intents3.json", "r") as file:
     intents = json.load(file)
-with open("words.pkl", "rb") as file:
+with open("chatbot_cache/words.pkl", "rb") as file:
     words = pickle.load(file)
-with open("classes.pkl", "rb") as file:
+with open("chatbot_cache/classes.pkl", "rb") as file:
     classes = pickle.load(file)
 
 
@@ -101,8 +98,12 @@ response_container = st.container()
 #     if text ==
 
 
-def get_text():
+def get_text() -> str:
     input_text = st.text_input("You: ", key="input", on_change=None)
+    # Type checker insists input_text is always a str
+    # so we make sure reality matches its expectation
+    if input_text is None:
+        input_text = ""
     return input_text
 
 
@@ -122,7 +123,7 @@ with input_container:
     user_input = get_text()
 
 # <================================================ Loading The Model ===============================================================>
-model = load_model("chatbot_model.h5")
+model = load_model("chatbot_cache/chatbot_model.h5")
 
 
 # <============================== Function for taking user prompt as input followed by producing AI generated responses ============>
@@ -131,11 +132,10 @@ model = load_model("chatbot_model.h5")
 # TODO: Implement a data model that will make a response
 
 # def generate_response(prompt):
-#     clean_up_sentence(prompt) # For Lemmatizing and tokenizing the new sentence
-#     bow(prompt, words, show_details=True) #
-#     predict_class(prompt,model)
+#     # clean_up_sentence(), bow(), and predict_class() are called indirectly
 #     response = chatbot_response(prompt)
 #     return response
+
 # <--------------------Creating the submit button and changing it using CSS----------------------->
 submit_button = st.button("Enter")
 styl = """
